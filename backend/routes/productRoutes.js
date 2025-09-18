@@ -5,9 +5,17 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const upload = require('../middleware/upload');
 const path = require('path');
+const { v2: cloudinary } = require('cloudinary');
+const stream = require('stream');
 
-// Serve uploaded files
-router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Cloudinary configuration via env vars
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Local uploads serving removed: images stored in Cloudinary
 
 // Get all products
 router.get('/', async (req, res) => {
@@ -46,18 +54,43 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Helper to upload a buffer to Cloudinary
+async function uploadBufferToCloudinary(fileBuffer, folder) {
+  return new Promise((resolve, reject) => {
+    const readableStream = new stream.PassThrough();
+    readableStream.end(fileBuffer);
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: folder || 'blnr-ecommerce/products' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    readableStream.pipe(uploadStream);
+  });
+}
+
 // Create a product (admin only)
 router.post('/', auth, admin, upload.array('images', 5), async (req, res) => {
   try {
-    const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
-    const productData = {
-      ...req.body,
-      images: imagePaths
-    };
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      const uploads = await Promise.all(
+        req.files.map(f => uploadBufferToCloudinary(f.buffer, 'blnr-ecommerce/products'))
+      );
+      imageUrls = uploads.map(u => u.secure_url);
+    }
+
+    const productData = { ...req.body };
+    if (imageUrls.length > 0) productData.images = imageUrls;
+
     const product = new Product(productData);
     const savedProduct = await product.save();
     res.status(201).json(savedProduct);
   } catch (error) {
+    console.error('Create product error:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -72,8 +105,10 @@ router.put('/:id', auth, admin, upload.array('images', 5), async (req, res) => {
 
     const updateData = { ...req.body };
     if (req.files && req.files.length > 0) {
-      const newImagePaths = req.files.map(file => `/uploads/${file.filename}`);
-      updateData.images = newImagePaths;
+      const uploads = await Promise.all(
+        req.files.map(f => uploadBufferToCloudinary(f.buffer, 'blnr-ecommerce/products'))
+      );
+      updateData.images = uploads.map(u => u.secure_url);
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -83,6 +118,7 @@ router.put('/:id', auth, admin, upload.array('images', 5), async (req, res) => {
     );
     res.json(updatedProduct);
   } catch (error) {
+    console.error('Update product error:', error);
     res.status(400).json({ message: error.message });
   }
 });
