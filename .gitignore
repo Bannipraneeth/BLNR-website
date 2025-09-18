@@ -1,0 +1,45 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build outputs
+.next/
+**/.next/
+dist/
+build/
+
+# environment files
+.env
+.env.*
+*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# test artifacts
+coverage/
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
+
+# uploads and generated assets
+backend/uploads/
+**/uploads/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.swp
+
+# package managers
+.pnp.cjs
+.pnp.data.json
+.pnpm-store/
+
+# misc
+.vercel/
+.turbo/
