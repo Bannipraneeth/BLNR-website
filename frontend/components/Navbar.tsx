@@ -41,7 +41,7 @@ export default function Navbar() {
             </Link>
             {isLoggedIn ? (
               <>
-                {user?.role === 'admin' && (
+                {user && user.role === 'admin' && (
                   <Link
                     href="/admin"
                     className="text-gray-600 hover:text-gray-900 flex items-center space-x-2"
@@ -114,7 +114,7 @@ export default function Navbar() {
             </Link>
             {isLoggedIn ? (
               <>
-                {user?.role === 'admin' && (
+                {user && user.role === 'admin' && (
                   <Link
                     href="/admin"
                     className="block px-3 py-2 text-gray-600 hover:text-gray-900"
