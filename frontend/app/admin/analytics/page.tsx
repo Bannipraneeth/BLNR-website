@@ -114,17 +114,17 @@ export default function AdminAnalytics() {
   };
 
   const orderTrendData = {
-    labels: stats.ordersByDay.map(day => day.date),
+    labels: stats.ordersByDay.map((day: { date: string; count: number; revenue: number }) => day.date),
     datasets: [
       {
         label: 'Orders',
-        data: stats.ordersByDay.map(day => day.count),
+        data: stats.ordersByDay.map((day: { date: string; count: number; revenue: number }) => day.count),
         borderColor: '#60A5FA',
         backgroundColor: '#60A5FA',
       },
       {
         label: 'Revenue',
-        data: stats.ordersByDay.map(day => day.revenue),
+        data: stats.ordersByDay.map((day: { date: string; count: number; revenue: number }) => day.revenue),
         borderColor: '#34D399',
         backgroundColor: '#34D399',
       },
@@ -132,11 +132,11 @@ export default function AdminAnalytics() {
   };
 
   const topProductsData = {
-    labels: stats.topProducts.map(product => product.name),
+    labels: stats.topProducts.map((product: { name: string; quantity: number; revenue: number }) => product.name),
     datasets: [
       {
         label: 'Revenue',
-        data: stats.topProducts.map(product => product.revenue),
+        data: stats.topProducts.map((product: { name: string; quantity: number; revenue: number }) => product.revenue),
         backgroundColor: '#60A5FA',
       },
     ],
